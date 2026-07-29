@@ -4,12 +4,10 @@ import React, { useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import { 
   TrendingUp, 
-  TrendingDown, 
   Wallet, 
   PlusCircle, 
   ArrowUpRight, 
   ArrowDownLeft, 
-  Calendar,
   Zap,
   CheckCircle2,
   Clock
@@ -47,8 +45,6 @@ export default function DashboardPage() {
     setAmount('');
     setShowQuickAdd(false);
   };
-
-  const activeInstallments = installments.filter(i => !i.is_amortized);
 
   return (
     <div className="space-y-6">
@@ -152,7 +148,7 @@ export default function DashboardPage() {
         <div className="p-6 rounded-2xl bg-white border border-surface-border shadow-sm">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-text-secondary">
-              Despesas & Parcelas do Mês
+              Despesas &amp; Parcelas do Mês
             </span>
             <div className="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center text-expense">
               <ArrowDownLeft className="w-5 h-5" />
@@ -216,7 +212,7 @@ export default function DashboardPage() {
         <div className="p-5 bg-white rounded-2xl border border-surface-border shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="font-heading font-bold text-base text-primary flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-blue-600" /> Financiamentos & Amortizações (RN-04)
+              <TrendingUp className="w-5 h-5 text-blue-600" /> Financiamentos &amp; Amortizações (RN-04)
             </h3>
             <Link href="/commitments" className="text-xs font-semibold text-blue-600 hover:underline">
               Gerenciar &rarr;
