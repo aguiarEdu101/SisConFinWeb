@@ -97,7 +97,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         .select('*, group:groups(*)')
         .eq('user_id', userId);
 
-      const userGroupsMapped: Group[] = ugList ? ugList.map((item: any) => item.group).filter(Boolean) : [];
+      const userGroupsMapped: Group[] = ugList ? ugList.map((item: { group: Group }) => item.group).filter(Boolean) : [];
 
       setDataState(prev => ({
         ...prev,
