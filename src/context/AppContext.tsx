@@ -80,6 +80,7 @@ export function AppProvider({ children }: { children: React.ReactNode }): React.
         authListener.subscription.unsubscribe();
       };
     }
+    return undefined;
   }, [isMock]);
 
   const fetchSupabaseUserData = async (userId: string, email: string): Promise<void> => {
@@ -246,7 +247,7 @@ export function AppProvider({ children }: { children: React.ReactNode }): React.
         installment_number: num,
         amount: instAmount,
         due_date: dueDate.toISOString().slice(0, 10),
-        status: 'PENDING' as const,
+        status: 'PENDING',
         is_amortized: false
       };
     });
