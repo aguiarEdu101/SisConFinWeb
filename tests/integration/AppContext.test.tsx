@@ -3,81 +3,109 @@ import { render, screen, act } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import { AppProvider, useApp } from '@/context/AppContext';
 
-function TestConsumerComponent() {
+function TestGroupComponent() {
   const { 
-    currentRole, 
-    switchUserRole, 
-    transactions, 
-    toggleTransactionStatus, 
-    inviteMember, 
-    userGroups 
+    userGroupsList, 
+    createGroup, 
+    deleteGroupSafely 
   } = useApp();
 
   return (
     <div>
-      <span data-testid="role">{currentRole}</span>
-      <span data-testid="tx-count">{transactions.length}</span>
-      <span data-testid="first-tx-status">{transactions[0]?.status}</span>
-      <span data-testid="member-count">{userGroups.length}</span>
+      <span data-testid="group-count">{userGroupsList.length}</span>
+      <button 
+        data-testid="btn-add-g1" 
+        onClick={() => createGroup('Grupo Extra 1')}
+      >
+        Add Group 1
+      </button>
+      <button 
+        data-testid="btn-add-g2" 
+        onClick={() => createGroup('Grupo Extra 2')}
+      >
+        Add Group 2
+      </button>
+      <button 
+        data-testid="btn-add-g3" 
+        onClick={() => createGroup('Grupo Extra 3')}
+      >
+        Add Group 3
+      </button>
 
-      <button data-testid="btn-switch" onClick={() => switchUserRole('BASIC')}>Switch to Basic</button>
-      <button data-testid="btn-toggle-tx" onClick={() => toggleTransactionStatus(transactions[0]?.id)}>Toggle Status</button>
-      <button data-testid="btn-invite" onClick={() => inviteMember('novo@familia.com', 'BASIC')}>Invite Member</button>
+      <button 
+        data-testid="btn-delete-wrong" 
+        onClick={() => deleteGroupSafely(userGroupsList[0]?.id || '', 'NomeErrado')}
+      >
+        Delete Wrong
+      </button>
+      <button 
+        data-testid="btn-delete-correct" 
+        onClick={() => deleteGroupSafely(userGroupsList[0]?.id || '', userGroupsList[0]?.name || '')}
+      >
+        Delete Correct
+      </button>
     </div>
   );
 }
 
-describe('AppContext Integration & RBAC Protection (RN-03)', () => {
-  it('deve permitir alterar o papel do usuário entre ADMIN e BASIC', () => {
+describe('RN-01 & Safe Deletion: Limite de 3 Grupos & Exclusão Segura', () => {
+  it('deve permitir criar até 3 grupos e BLOQUEAR o 4º grupo', () => {
     render(
       <AppProvider>
-        <TestConsumerComponent />
+        <TestGroupComponent />
       </AppProvider>
     );
 
-    expect(screen.getByTestId('role')).toHaveTextContent('ADMIN');
+    expect(screen.getByTestId('group-count')).toHaveTextContent('1');
 
     act(() => {
-      screen.getByTestId('btn-switch').click();
+      screen.getByTestId('btn-add-g1').click();
     });
+    expect(screen.getByTestId('group-count')).toHaveTextContent('2');
 
-    expect(screen.getByTestId('role')).toHaveTextContent('BASIC');
+    act(() => {
+      screen.getByTestId('btn-add-g2').click();
+    });
+    expect(screen.getByTestId('group-count')).toHaveTextContent('3');
+
+    act(() => {
+      screen.getByTestId('btn-add-g3').click();
+    });
+    expect(screen.getByTestId('group-count')).toHaveTextContent('3');
   });
 
-  it('deve alternar em 1 toque o status de um lançamento entre PAID e PENDING', () => {
+  it('deve RECUSAR a exclusão do grupo caso o texto de confirmação seja incorreto', () => {
     render(
       <AppProvider>
-        <TestConsumerComponent />
+        <TestGroupComponent />
       </AppProvider>
     );
 
-    const initialStatus = screen.getByTestId('first-tx-status').textContent;
+    const initialCount = screen.getByTestId('group-count').textContent;
 
     act(() => {
-      screen.getByTestId('btn-toggle-tx').click();
+      screen.getByTestId('btn-delete-wrong').click();
     });
 
-    const newStatus = screen.getByTestId('first-tx-status').textContent;
-    expect(newStatus).not.toEqual(initialStatus);
+    expect(screen.getByTestId('group-count')).toHaveTextContent(initialCount || '1');
   });
 
-  it('RN-03: Não deve permitir convidar membros quando o perfil for BASIC', () => {
+  it('deve APROVAR a exclusão do grupo quando o texto de confirmação for idêntico', () => {
     render(
       <AppProvider>
-        <TestConsumerComponent />
+        <TestGroupComponent />
       </AppProvider>
     );
 
-    const initialMembers = parseInt(screen.getByTestId('member-count').textContent || '0', 10);
+    act(() => {
+      screen.getByTestId('btn-add-g1').click();
+    });
+    expect(screen.getByTestId('group-count')).toHaveTextContent('2');
 
     act(() => {
-      screen.getByTestId('btn-switch').click();
+      screen.getByTestId('btn-delete-correct').click();
     });
 
-    act(() => {
-      screen.getByTestId('btn-invite').click();
-    });
-
-    expect(screen.getByTestId('member-count')).toHaveTextContent(initialMembers.toString());
+    expect(screen.getByTestId('group-count')).toHaveTextContent('1');
   });
 });
