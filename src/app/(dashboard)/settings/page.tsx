@@ -2,213 +2,196 @@
 
 import React, { useState } from 'react';
 import { useApp } from '@/context/AppContext';
-import { 
-  Users, 
-  FileSpreadsheet, 
-  ShieldAlert, 
-  UserPlus, 
-  Download, 
-  Check, 
-  PlusCircle, 
-  Trash2, 
-  AlertTriangle,
-  Layers,
-  Sparkles,
-  LogOut
-} from 'lucide-react';
-import { downloadFinancialReport } from '@/services/exportExcel';
-import { UserRole } from '@/types';
+import { UserProfile, UserRole } from '@/types';
+import { Users, Shield, LogOut, CheckCircle, AlertTriangle, PlusCircle, Trash2 } from 'lucide-react';
 
 export default function SettingsPage() {
   const { 
-    currentUser,
+    currentUser, 
     currentGroup, 
-    userGroupsList,
+    userGroupsList, 
+    currentRole, 
+    userGroups, 
+    switchUserRole, 
     switchGroup,
     createGroup,
     deleteGroupSafely,
-    currentRole, 
-    userGroups, 
-    transactions, 
-    commitments, 
-    creditCards, 
     inviteMember, 
-    updateMemberRole,
-    logout
+    updateMemberRole, 
+    logout 
   } = useApp();
 
-  const [inviteEmail, setInviteEmail] = useState('');
-  const [inviteRole, setInviteRole] = useState<UserRole>('BASIC');
-  const [isExporting, setIsExporting] = useState(false);
-  const [exportSuccess, setExportSuccess] = useState(false);
-
-  const [showCreateGroup, setShowCreateGroup] = useState(false);
-  const [newGroupName, setNewGroupName] = useState('');
-  const [groupError, setGroupError] = useState<string | null>(null);
+  const [newGroupInput, setNewGroupInput] = useState('');
+  const [newGroupError, setNewGroupError] = useState<string | null>(null);
 
   const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null);
   const [confirmationInput, setConfirmationInput] = useState('');
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  const handleInviteSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inviteEmail) return;
-    inviteMember(inviteEmail, inviteRole);
-    setInviteEmail('');
-  };
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteRole, setInviteRole] = useState<UserRole>('MEMBER');
+  const [inviteSuccess, setInviteSuccess] = useState(false);
 
   const handleCreateGroupSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setGroupError(null);
-    if (!newGroupName) return;
+    if (!newGroupInput.trim()) return;
+    setNewGroupError(null);
 
-    const res = createGroup(newGroupName);
+    const res = createGroup(newGroupInput.trim());
     if (res.success) {
-      setNewGroupName('');
-      setShowCreateGroup(false);
+      setNewGroupInput('');
     } else {
-      setGroupError(res.error || 'Erro ao criar grupo');
+      setNewGroupError(res.error || 'Erro ao criar grupo.');
     }
+  };
+
+  const handleOpenDeleteModal = (groupId: string) => {
+    setDeletingGroupId(groupId);
+    setConfirmationInput('');
+    setDeleteError(null);
   };
 
   const handleDeleteGroupSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setDeleteError(null);
     if (!deletingGroupId) return;
+    setDeleteError(null);
 
     const res = deleteGroupSafely(deletingGroupId, confirmationInput);
     if (res.success) {
       setDeletingGroupId(null);
       setConfirmationInput('');
     } else {
-      setDeleteError(res.error || 'Erro ao deletar grupo');
+      setDeleteError(res.error || 'Erro ao excluir grupo.');
     }
   };
 
-  const handleExportExcel = async () => {
-    setIsExporting(true);
-    setExportSuccess(false);
-    try {
-      await downloadFinancialReport(
-        currentGroup?.name || 'SisConFin',
-        transactions,
-        commitments,
-        creditCards
-      );
-      setExportSuccess(true);
-      setTimeout(() => setExportSuccess(false), 3000);
-    } catch (err) {
-      console.error('Erro ao exportar planilha:', err);
-    } finally {
-      setIsExporting(false);
-    }
+  const handleInviteSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inviteEmail) return;
+    inviteMember(inviteEmail, inviteRole);
+    setInviteEmail('');
+    setInviteSuccess(true);
+    setTimeout(() => setInviteSuccess(false), 3000);
   };
 
-  const isAdmin = currentRole === 'ADMIN';
   const targetDeletingGroup = userGroupsList.find(g => g.id === deletingGroupId);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 max-w-4xl">
       <div>
-        <h2 className="text-2xl font-heading font-bold text-primary flex items-center gap-2">
-          <Users className="w-7 h-7 text-slate-700" /> Configurações, Meus Grupos & Perfil
+        <h2 className="text-2xl font-heading font-bold text-primary">
+          Minha Conta &amp; Grupos Financeiros
         </h2>
         <p className="text-sm text-text-secondary">
-          Gerencie seus grupos financeiros (até 3), membros colaboradores e dados da sua conta.
+          Gerencie até 3 grupos financeiros, membros colaboradores e dados da sua conta.
         </p>
       </div>
 
-      <div className="p-6 bg-white rounded-2xl border border-surface-border shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">Minha Conta Autenticada</span>
-          <h3 className="font-heading font-bold text-lg text-primary">
-            {currentUser?.name || 'Usuário SisConFin'}
-          </h3>
-          <p className="text-xs text-text-secondary">
-            E-mail: <strong>{currentUser?.email || 'Nenhum e-mail logado'}</strong>
-          </p>
+      <div className="p-6 bg-white rounded-2xl border border-surface-border shadow-sm space-y-4">
+        <h3 className="font-heading font-bold text-base text-primary flex items-center gap-2">
+          <Users className="w-5 h-5 text-primary" /> Perfil do Usuário Logado
+        </h3>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+          <div>
+            <span className="text-xs text-text-muted font-medium">Nome</span>
+            <p className="text-sm font-semibold text-primary">{currentUser?.name || 'Usuário SisConFin'}</p>
+          </div>
+          <div>
+            <span className="text-xs text-text-muted font-medium">E-mail Principal</span>
+            <p className="text-sm font-semibold text-primary">{currentUser?.email || 'usuario@sisconfin.com'}</p>
+          </div>
         </div>
 
-        <button
-          onClick={() => logout()}
-          className="px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold text-xs rounded-xl border border-rose-200 flex items-center space-x-2 w-fit"
-        >
-          <LogOut className="w-4 h-4" />
-          <span>Encerrar Sessão (Logout)</span>
-        </button>
+        <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <span className="text-xs text-text-secondary">Papel de Simulação:</span>
+            <select
+              value={currentRole}
+              onChange={e => switchUserRole(e.target.value as UserRole)}
+              className="text-xs font-semibold px-2 py-1 border border-slate-200 rounded-lg bg-slate-50 focus:outline-none"
+            >
+              <option value="ADMIN">ADMINISTRADOR</option>
+              <option value="MEMBER">MEMBRO</option>
+              <option value="VIEWER">LEITOR</option>
+            </select>
+          </div>
+          <button
+            onClick={logout}
+            className="inline-flex items-center space-x-1.5 text-xs font-bold text-rose-600 hover:text-rose-700 bg-rose-50 px-3 py-1.5 rounded-lg transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+            <span>Sair da Conta</span>
+          </button>
+        </div>
       </div>
 
-      <div className="p-6 bg-white rounded-2xl border border-surface-border shadow-sm space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+      <div className="p-6 bg-white rounded-2xl border border-surface-border shadow-sm space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <div className="flex items-center space-x-2">
-              <Layers className="w-5 h-5 text-blue-600" />
-              <h3 className="font-heading font-bold text-lg text-primary">
-                Meus Grupos Financeiros ({userGroupsList.length}/3)
-              </h3>
-            </div>
+            <h3 className="font-heading font-bold text-base text-primary flex items-center gap-2">
+              <Shield className="w-5 h-5 text-primary" /> Meus Grupos Financeiros ({userGroupsList.length}/3)
+            </h3>
             <p className="text-xs text-text-secondary">
-              Cada usuário pode criar ou participar de no máximo <strong>3 grupos</strong> (RN-01).
+              Cada conta pode criar e participar de até 3 grupos familiares ou pessoais.
             </p>
           </div>
 
-          <button
-            onClick={() => setShowCreateGroup(true)}
-            disabled={userGroupsList.length >= 3}
-            className="inline-flex items-center space-x-1.5 px-4 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-semibold rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <PlusCircle className="w-4 h-4" />
-            <span>Criar Novo Grupo</span>
-          </button>
+          <form onSubmit={handleCreateGroupSubmit} className="flex items-center space-x-2">
+            <input
+              type="text"
+              placeholder="Nome do Novo Grupo"
+              value={newGroupInput}
+              onChange={e => setNewGroupInput(e.target.value)}
+              className="px-3 py-1.5 text-xs border border-slate-200 rounded-lg focus:outline-none focus:border-primary"
+              disabled={userGroupsList.length >= 3}
+            />
+            <button
+              type="submit"
+              disabled={userGroupsList.length >= 3 || !newGroupInput.trim()}
+              className="inline-flex items-center space-x-1 px-3 py-1.5 bg-primary hover:bg-primary-hover disabled:bg-slate-200 text-white text-xs font-semibold rounded-lg shadow-sm transition-all"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>Criar</span>
+            </button>
+          </form>
         </div>
 
-        {userGroupsList.length >= 3 && (
-          <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-center space-x-2 font-medium">
-            <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />
-            <span>Você atingiu o limite de 3 grupos financeiros. Para criar outro, exclua um grupo existente.</span>
+        {newGroupError && (
+          <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-xs font-semibold text-rose-700">
+            {newGroupError}
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {userGroupsList.map(g => {
-            const isSelected = currentGroup?.id === g.id;
+        <div className="divide-y divide-slate-100 pt-2">
+          {userGroupsList.map(group => {
+            const isActive = currentGroup?.id === group.id;
             return (
-              <div 
-                key={g.id} 
-                className={`p-4 rounded-xl border transition-all space-y-3 ${
-                  isSelected 
-                    ? 'bg-slate-900 text-white border-slate-900 shadow-md' 
-                    : 'bg-slate-50 border-slate-200 text-primary hover:bg-slate-100'
-                }`}
-              >
-                <div className="flex items-start justify-between">
+              <div key={group.id} className="py-3.5 flex items-center justify-between gap-3">
+                <div className="flex items-center space-x-3">
+                  <div className={`w-3 h-3 rounded-full ${isActive ? 'bg-emerald-500 ring-4 ring-emerald-100' : 'bg-slate-300'}`} />
                   <div>
-                    <span className="text-[10px] uppercase font-bold text-slate-400">Grupo</span>
-                    <h4 className="font-heading font-bold text-base truncate">{g.name}</h4>
+                    <p className="text-sm font-bold text-primary flex items-center gap-2">
+                      {group.name}
+                      {isActive && <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-full">Ativo</span>}
+                    </p>
+                    <span className="text-xs text-text-muted">Criado em {new Date(group.created_at).toLocaleDateString('pt-BR')}</span>
                   </div>
-                  {isSelected && (
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-400 text-emerald-950">
-                      Ativo
-                    </span>
-                  )}
                 </div>
 
-                <div className="flex items-center justify-between pt-2 border-t border-slate-200/40">
+                <div className="flex items-center space-x-2">
+                  {!isActive && (
+                    <button
+                      onClick={() => switchGroup(group.id)}
+                      className="px-2.5 py-1 text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-primary rounded-lg transition-colors"
+                    >
+                      Selecionar
+                    </button>
+                  )}
                   <button
-                    onClick={() => switchGroup(g.id)}
-                    className={`text-xs font-semibold ${isSelected ? 'text-emerald-400 underline' : 'text-blue-600 hover:underline'}`}
-                  >
-                    {isSelected ? 'Grupo Selecionado' : 'Alternar para este grupo'}
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setDeletingGroupId(g.id);
-                      setConfirmationInput('');
-                      setDeleteError(null);
-                    }}
-                    className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50/20"
-                    title="Excluir Grupo com Segurança"
+                    onClick={() => handleOpenDeleteModal(group.id)}
+                    className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors"
+                    title="Excluir grupo com confirmação segura"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -219,169 +202,78 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      <div className="p-6 bg-gradient-to-r from-emerald-900 to-teal-950 text-white rounded-2xl shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="space-y-1">
-          <div className="flex items-center space-x-2">
-            <FileSpreadsheet className="w-6 h-6 text-emerald-400" />
-            <h3 className="font-heading font-bold text-lg text-white">Exportação para Excel / Sheets (US05.1)</h3>
-          </div>
-          <p className="text-xs text-emerald-100/80 max-w-xl">
-            Exporte todo o histórico financeiro do seu grupo em 1 clique. O arquivo <code>.xlsx</code> formatado é gerado via Direct Download no navegador.
-          </p>
-        </div>
-
-        <button
-          onClick={handleExportExcel}
-          disabled={isExporting}
-          className="px-5 py-3 bg-emerald-500 hover:bg-emerald-400 text-white font-bold text-sm rounded-xl shadow-lg flex items-center justify-center space-x-2 transition-all active:scale-95 disabled:opacity-50"
-        >
-          {exportSuccess ? (
-            <>
-              <Check className="w-5 h-5 text-white" />
-              <span>Planilha Baixada!</span>
-            </>
-          ) : (
-            <>
-              <Download className="w-5 h-5" />
-              <span>{isExporting ? 'Gerando...' : 'Exportar Planilha Excel (.xlsx)'}</span>
-            </>
-          )}
-        </button>
-      </div>
-
-      <div className="bg-white rounded-2xl border border-surface-border shadow-sm p-6 space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
-          <div>
-            <h3 className="font-heading font-bold text-lg text-primary flex items-center gap-2">
-              Membros de {currentGroup?.name || 'Grupo'} (US01.2)
-            </h3>
-            <p className="text-xs text-text-secondary">
-              Somente usuários com permissão <strong>ADMIN</strong> podem convidar ou alterar permissões (RN-03).
-            </p>
-          </div>
-
-          {!isAdmin && (
-            <div className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-200 text-xs font-medium text-amber-800">
-              <ShieldAlert className="w-4 h-4 text-amber-600" />
-              <span>Perfil <strong>Básico</strong> ativo (Ações de gestão desabilitadas)</span>
+      {currentGroup && (
+        <div className="p-6 bg-white rounded-2xl border border-surface-border shadow-sm space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-heading font-bold text-base text-primary">
+                Membros do Grupo Ativo: <span className="text-emerald-600">{currentGroup.name}</span>
+              </h3>
+              <p className="text-xs text-text-secondary">
+                Colaboradores com acesso ao fluxo financeiro deste grupo.
+              </p>
             </div>
-          )}
-        </div>
+          </div>
 
-        {isAdmin && (
-          <form onSubmit={handleInviteSubmit} className="p-4 rounded-xl bg-slate-50 border border-slate-100 flex flex-col sm:flex-row items-center gap-3">
-            <input
-              type="email"
-              placeholder="Digite o e-mail do familiar (ex: duda@familia.com)"
-              value={inviteEmail}
-              onChange={e => setInviteEmail(e.target.value)}
-              className="flex-1 px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-primary w-full"
-              required
-            />
-            <select
-              value={inviteRole}
-              onChange={e => setInviteRole(e.target.value as UserRole)}
-              className="px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none w-full sm:w-auto"
-            >
-              <option value="BASIC">Perfil Básico</option>
-              <option value="ADMIN">Perfil Admin</option>
-            </select>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg shadow-sm w-full sm:w-auto flex items-center justify-center space-x-1.5"
-            >
-              <UserPlus className="w-4 h-4" />
-              <span>Convidar</span>
-            </button>
-          </form>
-        )}
+          <div className="divide-y divide-slate-100">
+            {userGroups.filter(ug => ug.group_id === currentGroup.id).map(ug => (
+              <div key={ug.user_id} className="py-3 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-primary">{ug.profile?.name || 'Membro Colaborador'}</p>
+                  <span className="text-xs text-text-muted">{ug.profile?.email || 'membro@sisconfin.com'}</span>
+                </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 border-b border-surface-border text-xs uppercase font-semibold text-text-muted">
-              <tr>
-                <th className="px-4 py-3">Membro</th>
-                <th className="px-4 py-3">E-mail</th>
-                <th className="px-4 py-3">Role / Permissão</th>
-                <th className="px-4 py-3 text-right">Ação Admin</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {userGroups.map(ug => (
-                <tr key={ug.user_id} className="hover:bg-slate-50/80">
-                  <td className="px-4 py-3.5 font-bold text-primary">
-                    {ug.profile?.name || 'Membro do Grupo'}
-                  </td>
-                  <td className="px-4 py-3.5 text-text-secondary">
-                    {ug.profile?.email}
-                  </td>
-                  <td className="px-4 py-3.5">
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                      ug.role === 'ADMIN' 
-                        ? 'bg-slate-900 text-white' 
-                        : 'bg-slate-100 text-slate-700 border border-slate-200'
-                    }`}>
-                      {ug.role === 'ADMIN' ? 'Administrador' : 'Usuário Básico'}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3.5 text-right">
-                    {isAdmin && (
-                      <button
-                        onClick={() => updateMemberRole(ug.user_id, ug.role === 'ADMIN' ? 'BASIC' : 'ADMIN')}
-                        className="text-xs text-primary font-semibold hover:underline"
-                      >
-                        Alternar para {ug.role === 'ADMIN' ? 'Básico' : 'Admin'}
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {showCreateGroup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl border border-surface-border shadow-xl max-w-md w-full p-6 space-y-4">
-            <h3 className="text-lg font-heading font-bold text-primary">Criar Novo Grupo Financeiro</h3>
-            
-            {groupError && (
-              <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-xs font-semibold text-rose-700">
-                {groupError}
+                <div className="flex items-center space-x-2">
+                  <select
+                    value={ug.role}
+                    onChange={e => updateMemberRole(ug.user_id, e.target.value as UserRole)}
+                    disabled={currentRole !== 'ADMIN'}
+                    className="text-xs font-semibold px-2 py-1 border border-slate-200 rounded-lg bg-slate-50"
+                  >
+                    <option value="ADMIN">ADMIN</option>
+                    <option value="MEMBER">MEMBRO</option>
+                    <option value="VIEWER">LEITOR</option>
+                  </select>
+                </div>
               </div>
-            )}
+            ))}
+          </div>
 
-            <form onSubmit={handleCreateGroupSubmit} className="space-y-3">
-              <div>
-                <label className="block text-xs font-semibold text-text-secondary mb-1">Nome do Grupo</label>
+          {currentRole === 'ADMIN' && (
+            <form onSubmit={handleInviteSubmit} className="pt-4 border-t border-slate-100 space-y-3">
+              <span className="text-xs font-bold uppercase tracking-wider text-text-secondary">Convidar Novo Membro</span>
+              <div className="flex flex-col sm:flex-row gap-3">
                 <input
-                  type="text"
-                  placeholder="Ex: Orçamento Viagem, Família Silva"
-                  value={newGroupName}
-                  onChange={e => setNewGroupName(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary font-semibold"
+                  type="email"
+                  placeholder="E-mail do colaborador"
+                  value={inviteEmail}
+                  onChange={e => setInviteEmail(e.target.value)}
+                  className="flex-1 px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:border-primary"
                   required
                 />
-              </div>
-
-              <div className="flex justify-end space-x-3 pt-3">
-                <button
-                  type="button"
-                  onClick={() => setShowCreateGroup(false)}
-                  className="px-4 py-2 text-sm font-semibold text-text-secondary hover:text-primary"
+                <select
+                  value={inviteRole}
+                  onChange={e => setInviteRole(e.target.value as UserRole)}
+                  className="px-3 py-2 text-xs border border-slate-200 rounded-lg bg-slate-50"
                 >
-                  Cancelar
-                </button>
+                  <option value="MEMBER">MEMBRO (Editar)</option>
+                  <option value="VIEWER">LEITOR (Visualizar)</option>
+                  <option value="ADMIN">ADMIN (Total)</option>
+                </select>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-sm font-semibold bg-primary text-white rounded-lg hover:bg-primary-hover shadow-sm"
+                  className="px-4 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-lg shadow-sm"
                 >
-                  Salvar Grupo
+                  Enviar Convite
                 </button>
               </div>
+              {inviteSuccess && (
+                <p className="text-xs font-semibold text-emerald-600 flex items-center gap-1">
+                  <CheckCircle className="w-4 h-4" /> Convite enviado com sucesso!
+                </p>
+              )}
             </form>
-          </div>
+          )}
         </div>
       )}
 
@@ -394,7 +286,7 @@ export default function SettingsPage() {
             </div>
 
             <p className="text-xs text-text-secondary leading-relaxed">
-              A exclusão é <strong>irreversível</strong> e apagará todos os lançamentos e financiamentos do grupo <strong>"{targetDeletingGroup.name}"</strong>.
+              A exclusão é <strong>irreversível</strong> e apagará todos os lançamentos e financiamentos do grupo <strong>&quot;{targetDeletingGroup.name}&quot;</strong>.
             </p>
 
             {deleteError && (
@@ -406,7 +298,7 @@ export default function SettingsPage() {
             <form onSubmit={handleDeleteGroupSubmit} className="space-y-3">
               <div>
                 <label className="block text-xs font-bold text-rose-700 mb-1">
-                  Digite "{targetDeletingGroup.name}" para confirmar:
+                  Digite &quot;{targetDeletingGroup.name}&quot; para confirmar:
                 </label>
                 <input
                   type="text"
@@ -422,16 +314,15 @@ export default function SettingsPage() {
                 <button
                   type="button"
                   onClick={() => setDeletingGroupId(null)}
-                  className="px-4 py-2 text-sm font-semibold text-text-secondary hover:text-primary"
+                  className="px-4 py-2 text-xs font-semibold text-text-secondary hover:bg-slate-100 rounded-lg transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  disabled={confirmationInput.trim() !== targetDeletingGroup.name.trim() && confirmationInput.trim() !== `CONFIRMAR ${targetDeletingGroup.name.trim()}`}
-                  className="px-4 py-2 text-sm font-bold bg-rose-600 hover:bg-rose-700 text-white rounded-lg shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="px-4 py-2 text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white rounded-lg shadow-sm transition-all"
                 >
-                  Excluir Grupo Permanentemente
+                  Excluir Grupo Definitivamente
                 </button>
               </div>
             </form>
