@@ -10,11 +10,12 @@ export async function downloadFinancialReport(
   transactions: Transaction[],
   commitments: Commitment[],
   creditCards: CreditCard[]
-) {
+): Promise<void> {
   const workbook = new ExcelJS.Workbook();
   workbook.creator = 'SisConFin';
   workbook.created = new Date();
 
+  // Aba 1: Lançamentos Diários
   const sheetTx = workbook.addWorksheet('Lançamentos Diários');
   sheetTx.columns = [
     { header: 'Data Ref.', key: 'ref_date', width: 14 },
@@ -36,6 +37,7 @@ export async function downloadFinancialReport(
     });
   });
 
+  // Aba 2: Financiamentos e Compromissos
   const sheetCommitments = workbook.addWorksheet('Financiamentos');
   sheetCommitments.columns = [
     { header: 'Compromisso', key: 'title', width: 28 },
@@ -55,6 +57,7 @@ export async function downloadFinancialReport(
     });
   });
 
+  // Aba 3: Cartões de Crédito
   const sheetCards = workbook.addWorksheet('Cartões de Crédito');
   sheetCards.columns = [
     { header: 'Cartão', key: 'card_name', width: 22 },
@@ -72,6 +75,7 @@ export async function downloadFinancialReport(
     });
   });
 
+  // Estilização simples dos cabeçalhos
   [sheetTx, sheetCommitments, sheetCards].forEach(sheet => {
     const headerRow = sheet.getRow(1);
     headerRow.font = { bold: true, color: { argb: 'FFFFFF' } };
@@ -82,6 +86,7 @@ export async function downloadFinancialReport(
     };
   });
 
+  // Gera o buffer e dispara o download no navegador
   const buffer = await workbook.xlsx.writeBuffer();
   const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   const url = window.URL.createObjectURL(blob);

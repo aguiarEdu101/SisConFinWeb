@@ -49,7 +49,7 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-export function AppProvider({ children }: { children: React.ReactNode }) {
+export function AppProvider({ children }: { children: React.ReactNode }): React.JSX.Element {
   const [isMock] = useState<boolean>(isMockMode());
   const [dataState, setDataState] = useState<DataState>(() => MockDataProvider.loadState());
   const [currentRole, setCurrentRole] = useState<UserRole>('ADMIN');
@@ -82,7 +82,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, [isMock]);
 
-  const fetchSupabaseUserData = async (userId: string, email: string) => {
+  const fetchSupabaseUserData = async (userId: string, email: string): Promise<void> => {
     try {
       const { data: profile } = await supabase.from('profiles').select('*').eq('id', userId).single();
       const userObj: UserProfile = profile || {
@@ -105,8 +105,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         groups: userGroupsMapped,
         currentGroup: userGroupsMapped[0] || null
       }));
-    } catch (err) {
-      console.error('Erro ao buscar dados do Supabase:', err);
+    } catch (err: unknown) {
+      console.error('Erro ao buscar dados do Supabase:', err instanceof Error ? err.message : String(err));
     }
   };
 
@@ -116,11 +116,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     dataState.cardStatements
   );
 
-  const switchUserRole = (role: UserRole) => {
+  const switchUserRole = (role: UserRole): void => {
     setCurrentRole(role);
   };
 
-  const switchGroup = (groupId: string) => {
+  const switchGroup = (groupId: string): void => {
     const targetGroup = dataState.groups.find(g => g.id === groupId);
     if (targetGroup) {
       setDataState(prev => ({ ...prev, currentGroup: targetGroup }));
@@ -190,7 +190,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return { success: true };
   };
 
-  const addTransaction = (txData: Omit<Transaction, 'id' | 'group_id' | 'user_id' | 'created_at'>) => {
+  const addTransaction = (txData: Omit<Transaction, 'id' | 'group_id' | 'user_id' | 'created_at'>): void => {
     if (!dataState.currentGroup) return;
     const newTx: Transaction = {
       ...txData,
@@ -205,7 +205,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }));
   };
 
-  const toggleTransactionStatus = (id: string) => {
+  const toggleTransactionStatus = (id: string): void => {
     setDataState(prev => ({
       ...prev,
       transactions: prev.transactions.map(t => {
@@ -218,14 +218,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }));
   };
 
-  const deleteTransaction = (id: string) => {
+  const deleteTransaction = (id: string): void => {
     setDataState(prev => ({
       ...prev,
       transactions: prev.transactions.filter(t => t.id !== id)
     }));
   };
 
-  const addCommitment = (cData: Omit<Commitment, 'id' | 'group_id' | 'created_at'>) => {
+  const addCommitment = (cData: Omit<Commitment, 'id' | 'group_id' | 'created_at'>): void => {
     if (!dataState.currentGroup) return;
     const commId = `comm-${Date.now()}`;
     const newComm: Commitment = {
@@ -246,7 +246,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         installment_number: num,
         amount: instAmount,
         due_date: dueDate.toISOString().slice(0, 10),
-        status: 'PENDING',
+        status: 'PENDING' as const,
         is_amortized: false
       };
     });
@@ -258,7 +258,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }));
   };
 
-  const amortizeCommitment = (commitmentId: string, amount: number) => {
+  const amortizeCommitment = (commitmentId: string, amount: number): void => {
     const commInstallments = dataState.installments.filter(i => i.commitment_id === commitmentId);
     const { updatedInstallments } = amortizeReverseInstallment(commInstallments, amount);
 
@@ -271,7 +271,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }));
   };
 
-  const addCreditCard = (cardData: Omit<CreditCard, 'id' | 'group_id' | 'created_at'>) => {
+  const addCreditCard = (cardData: Omit<CreditCard, 'id' | 'group_id' | 'created_at'>): void => {
     if (!dataState.currentGroup) return;
     const newCard: CreditCard = {
       ...cardData,
@@ -285,7 +285,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }));
   };
 
-  const updateCardStatement = (cardId: string, month: number, year: number, amount: number, status: 'PENDING' | 'PAID') => {
+  const updateCardStatement = (cardId: string, month: number, year: number, amount: number, status: 'PENDING' | 'PAID'): void => {
     setDataState(prev => {
       const existing = prev.cardStatements.find(s => s.card_id === cardId && s.month_ref === month && s.year_ref === year);
       let updatedStatements: CardStatement[];
@@ -307,7 +307,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const inviteMember = (email: string, role: UserRole) => {
+  const inviteMember = (email: string, role: UserRole): void => {
     if (currentRole !== 'ADMIN' || !dataState.currentGroup) return;
     const newUserId = `user-${Date.now()}`;
     const newUserGroup: UserGroup = {
@@ -328,7 +328,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }));
   };
 
-  const updateMemberRole = (userId: string, newRole: UserRole) => {
+  const updateMemberRole = (userId: string, newRole: UserRole): void => {
     if (currentRole !== 'ADMIN') return;
     setDataState(prev => ({
       ...prev,
@@ -336,7 +336,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }));
   };
 
-  const logout = async () => {
+  const logout = async (): Promise<void> => {
     if (!isMock) {
       await supabase.auth.signOut();
     }
@@ -380,7 +380,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function useApp() {
+export function useApp(): AppContextType {
   const context = useContext(AppContext);
   if (!context) {
     throw new Error('useApp deve ser usado dentro de um AppProvider');

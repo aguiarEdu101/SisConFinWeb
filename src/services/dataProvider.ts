@@ -6,8 +6,7 @@ import {
   CardStatement, 
   UserProfile, 
   Group, 
-  UserGroup, 
-  UserRole 
+  UserGroup
 } from '@/types';
 import { 
   initialUser, 
@@ -19,7 +18,6 @@ import {
   initialCreditCards, 
   initialCardStatements 
 } from '@/lib/mockStore';
-import { supabase } from '@/lib/supabase/client';
 
 export interface DataState {
   user: UserProfile | null;
@@ -42,9 +40,6 @@ export const isMockMode = (): boolean => {
   return process.env.NODE_ENV !== 'production';
 };
 
-/**
- * Provedor de Dados Local (MockStore + LocalStorage) para Desenvolvimento Local
- */
 export class MockDataProvider {
   private static STORAGE_KEY = 'sisconfin_mock_state_v1';
 
@@ -67,8 +62,8 @@ export class MockDataProvider {
     if (saved) {
       try {
         return JSON.parse(saved);
-      } catch (e) {
-        console.error('Erro ao ler estado do localStorage:', e);
+      } catch (e: unknown) {
+        console.error('Erro ao ler estado do localStorage:', e instanceof Error ? e.message : String(e));
       }
     }
 
@@ -88,7 +83,7 @@ export class MockDataProvider {
     return defaultState;
   }
 
-  static saveState(state: DataState) {
+  static saveState(state: DataState): void {
     if (typeof window !== 'undefined') {
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(state));
     }

@@ -5,7 +5,7 @@ import { Wallet, ArrowRight, Sparkles, CheckCircle2 } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { supabase } from '@/lib/supabase/client';
 
-export default function LoginPage() {
+export default function LoginPage(): React.JSX.Element {
   const { isMock } = useApp();
 
   const [email, setEmail] = useState('');
@@ -14,7 +14,7 @@ export default function LoginPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     setLoading(true);
     setError(null);
@@ -48,32 +48,30 @@ export default function LoginPage() {
       } else if (data.session) {
         window.location.href = '/';
       }
-    } catch (err: any) {
-      setError(err.message || 'Erro ao conectar à conta');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Erro ao conectar à conta';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center p-4">
+    <div className="min-h-[85vh] flex items-center justify-center p-4">
       <div className="bg-white rounded-3xl border border-surface-border shadow-xl max-w-md w-full p-8 space-y-6">
         <div className="text-center space-y-2">
-          <div className="w-12 h-12 rounded-xl bg-primary text-white flex items-center justify-center mx-auto shadow-lg">
-            <Wallet className="w-7 h-7" />
+          <div className="w-16 h-16 rounded-2xl bg-slate-900 text-white flex items-center justify-center mx-auto shadow-lg">
+            <Wallet className="w-9 h-9" />
           </div>
+          <span className="text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full inline-block">
+            <Sparkles className="w-3.5 h-3.5 inline -mt-0.5" /> SisConFin
+          </span>
           <h2 className="text-2xl font-heading font-extrabold text-primary">
-            Acessar SisConFin
+            Gestão Financeira Familiar
           </h2>
-          <p className="text-xs text-text-secondary">
-            Gestão financeira pessoal e familiar colaborativa em tempo real.
+          <p className="text-xs text-text-secondary max-w-xs mx-auto">
+            Acesse com e-mail e senha. O primeiro acesso cria automaticamente sua conta vinculada a um Grupo Financeiro.
           </p>
-
-          {isMock && (
-            <div className="p-2 bg-purple-50 border border-purple-200 rounded-lg text-purple-800 text-[11px] font-semibold flex items-center justify-center gap-1">
-              <Sparkles className="w-3.5 h-3.5" /> Modo Desenvolvimento Local (Mock Active)
-            </div>
-          )}
         </div>
 
         {error && (
@@ -81,10 +79,9 @@ export default function LoginPage() {
             {error}
           </div>
         )}
-
         {message && (
-          <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs font-semibold text-emerald-800 flex items-center gap-1">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" /> {message}
+          <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs font-semibold text-emerald-700 flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4" /> {message}
           </div>
         )}
 
@@ -93,9 +90,9 @@ export default function LoginPage() {
             <label className="block text-xs font-semibold text-text-secondary mb-1">E-mail</label>
             <input
               type="email"
-              placeholder="seu-email@familia.com"
+              placeholder="seu@email.com"
               value={email}
-              onChange={e => setEmail(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>): void => setEmail(e.target.value)}
               className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-primary"
               required
             />
@@ -106,7 +103,7 @@ export default function LoginPage() {
               type="password"
               placeholder="••••••••"
               value={password}
-              onChange={e => setPassword(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>): void => setPassword(e.target.value)}
               className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-primary"
               required
             />

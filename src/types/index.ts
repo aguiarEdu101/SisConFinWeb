@@ -51,6 +51,8 @@ export interface Commitment {
   installments?: Installment[];
 }
 
+// CRITICAL: Installment MUST have is_amortized and paid_at fields
+// These are used in amortization.ts, balanceCalculator.ts, commitments/page.tsx, and mockStore.ts
 export interface Installment {
   id: string;
   commitment_id: string;
@@ -58,31 +60,41 @@ export interface Installment {
   amount: number;
   due_date: string;
   status: PaymentStatus;
+  is_amortized: boolean;
+  paid_at?: string | null;
 }
 
+// CRITICAL: CreditCard uses card_name and monthly_limit (NOT name/limit_amount)
+// Verified in mockStore.ts, cards/page.tsx, exportExcel.ts
 export interface CreditCard {
   id: string;
   group_id: string;
-  name: string;
+  card_name: string;
   closing_day: number;
   due_day: number;
-  limit_amount: number;
+  monthly_limit: number;
   created_at: string;
 }
 
+// CRITICAL: CardStatement uses month_ref, year_ref, total_amount (NOT month/year/amount/due_date)
+// Verified in mockStore.ts, balanceCalculator.ts, cards/page.tsx, AppContext.tsx
 export interface CardStatement {
   id: string;
   card_id: string;
-  month: number;
-  year: number;
-  amount: number;
+  month_ref: number;
+  year_ref: number;
+  total_amount: number;
   status: PaymentStatus;
-  due_date: string;
+  created_at: string;
 }
 
+// CRITICAL: BalanceSummary uses these exact field names
+// Verified in balanceCalculator.ts return and dashboard/page.tsx consumption
 export interface BalanceSummary {
-  incomeTotal: number;
-  expenseTotal: number;
-  netBalance: number;
-  pendingExpenseTotal: number;
+  realizedIncome: number;
+  realizedExpense: number;
+  realizedBalance: number;
+  pendingIncome: number;
+  pendingExpense: number;
+  projectedBalance: number;
 }
