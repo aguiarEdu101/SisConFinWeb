@@ -1,4 +1,4 @@
-export type UserRole = 'ADMIN' | 'BASIC';
+export type UserRole = 'ADMIN' | 'BASIC' | 'MEMBER';
 export type TransactionType = 'INCOME' | 'EXPENSE';
 export type PaymentStatus = 'PENDING' | 'PAID' | 'LATE';
 export type CommitmentType = 'FINANCING' | 'LOAN' | 'OTHER';
@@ -58,36 +58,31 @@ export interface Installment {
   amount: number;
   due_date: string;
   status: PaymentStatus;
-  is_amortized: boolean;
-  paid_at?: string | null;
 }
 
 export interface CreditCard {
   id: string;
   group_id: string;
-  card_name: string;
+  name: string;
   closing_day: number;
   due_day: number;
-  monthly_limit: number;
+  limit_amount: number;
   created_at: string;
-  statements?: CardStatement[];
 }
 
 export interface CardStatement {
   id: string;
   card_id: string;
-  month_ref: number;
-  year_ref: number;
-  total_amount: number;
+  month: number;
+  year: number;
+  amount: number;
   status: PaymentStatus;
-  created_at: string;
+  due_date: string;
 }
 
 export interface BalanceSummary {
-  realizedIncome: number;
-  realizedExpense: number;
-  realizedBalance: number;
-  pendingIncome: number;
-  pendingExpense: number;
-  projectedBalance: number;
+  incomeTotal: number;
+  expenseTotal: number;
+  netBalance: number;
+  pendingExpenseTotal: number;
 }

@@ -1,5 +1,6 @@
 import React from 'react';
-import { render, screen, act } from '@testing-library/react';
+import { render, act } from '@testing-library/react';
+import { screen } from '@testing-library/dom';
 import { describe, it, expect } from 'vitest';
 import { AppProvider, useApp } from '@/context/AppContext';
 
@@ -56,6 +57,7 @@ describe('RN-01 & Safe Deletion: Limite de 3 Grupos & Exclusão Segura', () => {
       </AppProvider>
     );
 
+    // Inicialmente possui 1 grupo
     expect(screen.getByTestId('group-count')).toHaveTextContent('1');
 
     act(() => {
@@ -68,6 +70,7 @@ describe('RN-01 & Safe Deletion: Limite de 3 Grupos & Exclusão Segura', () => {
     });
     expect(screen.getByTestId('group-count')).toHaveTextContent('3');
 
+    // Tentativa de adicionar o 4º grupo (deve ser ignorado / bloqueado)
     act(() => {
       screen.getByTestId('btn-add-g3').click();
     });
@@ -87,6 +90,7 @@ describe('RN-01 & Safe Deletion: Limite de 3 Grupos & Exclusão Segura', () => {
       screen.getByTestId('btn-delete-wrong').click();
     });
 
+    // Quantidade permanece inalterada
     expect(screen.getByTestId('group-count')).toHaveTextContent(initialCount || '1');
   });
 
