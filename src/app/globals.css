@@ -1,0 +1,29 @@
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+@layer base {
+  body {
+    background-color: #F8FAFC;
+    color: #0F172A;
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    letter-spacing: -0.025em;
+  }
+}
+
+.badge-paid {
+  @apply bg-emerald-50 text-income border border-emerald-200 font-semibold px-2.5 py-0.5 rounded-full text-xs inline-flex items-center gap-1;
+}
+
+.badge-pending {
+  @apply bg-amber-50 text-pending border border-amber-200 font-semibold px-2.5 py-0.5 rounded-full text-xs inline-flex items-center gap-1;
+}
+
+.badge-late {
+  @apply bg-rose-50 text-expense border border-rose-200 font-semibold px-2.5 py-0.5 rounded-full text-xs inline-flex items-center gap-1;
+}
