@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, act, screen } from '@testing-library/react';
+import { render, act } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import { AppProvider, useApp } from '@/context/AppContext';
 
@@ -50,65 +50,65 @@ function TestGroupComponent() {
 
 describe('RN-01 & Safe Deletion: Limite de 3 Grupos & Exclusão Segura', () => {
   it('deve permitir criar até 3 grupos e BLOQUEAR o 4º grupo', () => {
-    render(
+    const { getByTestId } = render(
       <AppProvider>
         <TestGroupComponent />
       </AppProvider>
     );
 
     // Inicialmente possui 1 grupo
-    expect(screen.getByTestId('group-count')).toHaveTextContent('1');
+    expect(getByTestId('group-count')).toHaveTextContent('1');
 
     act(() => {
-      screen.getByTestId('btn-add-g1').click();
+      getByTestId('btn-add-g1').click();
     });
-    expect(screen.getByTestId('group-count')).toHaveTextContent('2');
+    expect(getByTestId('group-count')).toHaveTextContent('2');
 
     act(() => {
-      screen.getByTestId('btn-add-g2').click();
+      getByTestId('btn-add-g2').click();
     });
-    expect(screen.getByTestId('group-count')).toHaveTextContent('3');
+    expect(getByTestId('group-count')).toHaveTextContent('3');
 
     // Tentativa de adicionar o 4º grupo (deve ser ignorado / bloqueado)
     act(() => {
-      screen.getByTestId('btn-add-g3').click();
+      getByTestId('btn-add-g3').click();
     });
-    expect(screen.getByTestId('group-count')).toHaveTextContent('3');
+    expect(getByTestId('group-count')).toHaveTextContent('3');
   });
 
   it('deve RECUSAR a exclusão do grupo caso o texto de confirmação seja incorreto', () => {
-    render(
+    const { getByTestId } = render(
       <AppProvider>
         <TestGroupComponent />
       </AppProvider>
     );
 
-    const initialCount = screen.getByTestId('group-count').textContent;
+    const initialCount = getByTestId('group-count').textContent;
 
     act(() => {
-      screen.getByTestId('btn-delete-wrong').click();
+      getByTestId('btn-delete-wrong').click();
     });
 
     // Quantidade permanece inalterada
-    expect(screen.getByTestId('group-count')).toHaveTextContent(initialCount || '1');
+    expect(getByTestId('group-count')).toHaveTextContent(initialCount || '1');
   });
 
   it('deve APROVAR a exclusão do grupo quando o texto de confirmação for idêntico', () => {
-    render(
+    const { getByTestId } = render(
       <AppProvider>
         <TestGroupComponent />
       </AppProvider>
     );
 
     act(() => {
-      screen.getByTestId('btn-add-g1').click();
+      getByTestId('btn-add-g1').click();
     });
-    expect(screen.getByTestId('group-count')).toHaveTextContent('2');
+    expect(getByTestId('group-count')).toHaveTextContent('2');
 
     act(() => {
-      screen.getByTestId('btn-delete-correct').click();
+      getByTestId('btn-delete-correct').click();
     });
 
-    expect(screen.getByTestId('group-count')).toHaveTextContent('1');
+    expect(getByTestId('group-count')).toHaveTextContent('1');
   });
 });
