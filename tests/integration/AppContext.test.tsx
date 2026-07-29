@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, act } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { AppProvider, useApp } from '@/context/AppContext';
 
 function TestGroupComponent() {
@@ -49,6 +49,10 @@ function TestGroupComponent() {
 }
 
 describe('RN-01 & Safe Deletion: Limite de 3 Grupos & Exclusão Segura', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
   it('deve permitir criar até 3 grupos e BLOQUEAR o 4º grupo', () => {
     const { getByTestId } = render(
       <AppProvider>
