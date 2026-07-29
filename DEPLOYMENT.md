@@ -1,6 +1,6 @@
-# Guia de Deploy e Inicialização dos Seus Dados — SisConFin
+# Guia de Deploy, CI/CD e Rollback — SisConFinWeb
 
-Este guia passo a passo explica como publicar o **SisConFin** na **Vercel** e conectá-lo ao seu banco de dados no **Supabase** para começar a cadastrar as suas finanças reais.
+Este guia detalhado explica como configurar a **esteira de CI/CD automatizada** (GitHub Actions + Vercel) e como realizar **rollbacks em 1 clique** caso necessário.
 
 ---
 
@@ -11,32 +11,51 @@ Este guia passo a passo explica como publicar o **SisConFin** na **Vercel** e co
 3. No painel do Supabase, vá em **SQL Editor** no menu lateral.
 4. Abra o arquivo de migração do repositório:
    - **[supabase/migrations/20260729000001_initial_schema.sql](supabase/migrations/20260729000001_initial_schema.sql)**
-5. Cole o conteúdo do arquivo no SQL Editor do Supabase e clique em **"Run"**.
-   - *Isso criará as 8 tabelas do sistema (`profiles`, `groups`, `user_groups`, `transactions`, `commitments`, `installments`, `credit_cards`, `card_statements`) com políticas RLS de segurança por grupo.*
-6. Vá em **Project Settings > API** e copie:
-   - **Project URL** (ex: `https://xxxx.supabase.co`)
-   - **anon / public key** (ex: `eyJhbGciOi...`)
+5. Cole o conteúdo no SQL Editor do Supabase e clique em **"Run"**.
+6. Em **Project Settings > API**, copie:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
 ---
 
-## 🚀 Passo 2: Publicar na Vercel
+## 🚀 Passo 2: Configurar a Esteira de CI/CD Automatizada (GitHub Actions)
 
-### Opção A: Via GitHub + Painel Vercel (Recomendado)
-1. Suba este repositório para o seu **GitHub** (ex: `seu-usuario/SisConFinWeb`).
-2. Acesse **[vercel.com](https://vercel.com)** e clique em **"Add New... > Project"**.
-3. Importe o repositório **SisConFinWeb**.
-4. Na seção **Environment Variables**, adicione as duas variáveis do Supabase:
-   - `NEXT_PUBLIC_SUPABASE_URL` = (Sua Project URL do Supabase)
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = (Sua anon key do Supabase)
-5. Clique em **"Deploy"**. Em menos de 1 minuto seu link estará no ar (ex: `https://sisconfinweb.vercel.app`).
+A cada commit ou merge na branch `main` do repositório **[aguiarEdu101/SisConFinWeb](https://github.com/aguiarEdu101/SisConFinWeb)**, o GitHub Actions executa automaticamente:
+1. Checagem de tipos TypeScript (`npx tsc --noEmit`)
+2. Linter de código (`npm run lint`)
+3. Suíte de testes unitários e de integração Vitest (`npm run test`)
+4. **Deploy automático em Produção na Vercel** (somente se os testes passarem)
+
+### Secrets Necessárias no GitHub Repository (`Settings > Secrets and variables > Actions`):
+Adicione as seguintes 3 variáveis secretas no repositório do GitHub:
+
+| Nome da Secret | Descrição | Onde Obter |
+| :--- | :--- | :--- |
+| `VERCEL_TOKEN` | Token de Autenticação Pessoal da Vercel | Vercel Account Settings > Tokens |
+| `VERCEL_ORG_ID` | ID do seu time / usuário na Vercel | `.vercel/project.json` ou Configurações do Time |
+| `VERCEL_PROJECT_ID` | ID do projeto `SisConFinWeb` na Vercel | `.vercel/project.json` ou Vercel Project Settings |
 
 ---
 
-## 📲 Passo 3: Começar com os Seus Dados & Instalar o PWA
+## 🔄 Passo 3: Como Executar um Rollback Instantâneo (1-Clique)
 
-1. Acesse o link publicado no seu celular ou navegador.
-2. Faça seu cadastro e crie o seu **Grupo Financeiro Familiar** no onboarding (US01.1).
-3. **No Celular (iOS / Android):**
-   - **iPhone (Safari):** Clique no botão de compartilhamento do Safari e escolha **"Adicionar à Tela de Início"**.
-   - **Android (Chrome):** Clique no menu de 3 pontos do Chrome e selecione **"Instalar aplicativo"**.
-4. Convide sua parceira/família na aba **Grupo & Export** informando o e-mail deles.
+Se uma versão implantada apresentar instabilidades em produção, você pode revertê-la instantaneamente sem necessidade de alterar o código-fonte:
+
+### Opção A: Pelo Painel da Vercel (Recomendado)
+1. Acesse o painel da Vercel no projeto **`SisConFinWeb`**.
+2. Clique na aba **Deployments**.
+3. Localize o deployment anterior estável.
+4. Clique no menu de 3 pontos (`...`) ao lado do deployment e selecione **"Promote to Production"**. O ambiente é revertido em menos de 5 segundos.
+
+### Opção B: Pelo GitHub Actions (Workflow de Rollback)
+1. Acesse o repositório **`aguiarEdu101/SisConFinWeb`** no GitHub.
+2. Clique na aba **Actions** e selecione o workflow **"SisConFinWeb Instant Rollback"**.
+3. Clique em **"Run workflow"**.
+4. Informe o **Deployment ID** ou URL da versão estável anterior da Vercel e clique em **Run workflow**.
+
+---
+
+## 📲 Passo 4: Instalação do PWA no Celular (iOS / Android)
+
+1. **iPhone (Safari):** Abra o site do app, clique no botão de compartilhamento do Safari e selecione **"Adicionar à Tela de Início"**.
+2. **Android (Chrome):** Abra o site do app, clique no menu de 3 pontos do Chrome e selecione **"Instalar aplicativo"**.
